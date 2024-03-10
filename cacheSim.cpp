@@ -5,6 +5,7 @@
 #include <cmath>
 #include <memory>
 #include <vector>
+#include <iomanip>
 
 using std::FILE;
 using std::string;
