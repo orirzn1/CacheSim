@@ -316,7 +316,7 @@ public:
     
     double getL1MissRate()
     {
-        return L1.calcMissRate(); 
+        return L1.calcMissRate();
     }
     
     double getL2MissRate()
@@ -353,16 +353,17 @@ public:
                 //no change to cache after miss, we write directly to memory
                 return;
             }
-            bool boolean = false; //This bool will check if removed block was dirty
-            L1.addBlock(address, m_cacheAccessCount, removedBlockAddress, &boolean, op);
-            if(boolean)
-                L2.updateAccessNumber(*removedBlockAddress, m_cacheAccessCount, op);
             *removedBlockAddress = -1;
+            bool boolean = false;
             L2.addBlock(address, m_cacheAccessCount, removedBlockAddress, &boolean, op);
             if(*removedBlockAddress != -1)
             {
                 L1.removeBlock(*removedBlockAddress);
             }
+            boolean = false; //This bool will check if removed block was dirty
+            L1.addBlock(address, m_cacheAccessCount, removedBlockAddress, &boolean, op);
+            if(boolean)
+                L2.updateAccessNumber(*removedBlockAddress, m_cacheAccessCount, op);
             //if L2 replaces an existing block then make sure the existing block is removed from L1 as well --> Figure out way to know which block you removed from L2 --> different layers will have different tag/set for the same address
             //update
         }
@@ -372,67 +373,66 @@ public:
 
 int main(int argc, char **argv)
 {
+    if (argc < 19) {
+        cerr << "Not enough arguments" << endl;
+        return 0;
+    }
 
-	if (argc < 19) {
-		cerr << "Not enough arguments" << endl;
-		return 0;
-	}
+    // Get input arguments
 
-	// Get input arguments
+    // File
+    // Assuming it is the first argument
+    char* fileString = argv[1];
+    ifstream file(fileString); //input file stream
+    string line;
+    if (!file || !file.good()) {
+        // File doesn't exist or some other error
+        cerr << "File not found" << endl;
+        return 0;
+    }
 
-	// File
-	// Assuming it is the first argument
-	char* fileString = argv[1];
-	ifstream file(fileString); //input file stream
-	string line;
-	if (!file || !file.good()) {
-		// File doesn't exist or some other error
-		cerr << "File not found" << endl;
-		return 0;
-	}
+    unsigned MemCyc = 0, BSize = 0, L1Size = 0, L2Size = 0, L1Assoc = 0,
+            L2Assoc = 0, L1Cyc = 0, L2Cyc = 0, WrAlloc = 0;
 
-	unsigned MemCyc = 0, BSize = 0, L1Size = 0, L2Size = 0, L1Assoc = 0,
-			L2Assoc = 0, L1Cyc = 0, L2Cyc = 0, WrAlloc = 0;
-
-	for (int i = 2; i < 19; i += 2) {
-		string s(argv[i]);
-		if (s == "--mem-cyc") {
-			MemCyc = atoi(argv[i + 1]);
-		} else if (s == "--bsize") {
-			BSize = atoi(argv[i + 1]);
-		} else if (s == "--l1-size") {
-			L1Size = atoi(argv[i + 1]);
-		} else if (s == "--l2-size") {
-			L2Size = atoi(argv[i + 1]);
-		} else if (s == "--l1-cyc") {
-			L1Cyc = atoi(argv[i + 1]);
-		} else if (s == "--l2-cyc") {
-			L2Cyc = atoi(argv[i + 1]);
-		} else if (s == "--l1-assoc") {
-			L1Assoc = atoi(argv[i + 1]);
-		} else if (s == "--l2-assoc") {
-			L2Assoc = atoi(argv[i + 1]);
-		} else if (s == "--wr-alloc") {
-			WrAlloc = atoi(argv[i + 1]);
-		} else {
-			cerr << "Error in arguments" << endl;
-			return 0;
-		}
-	}
+    for (int i = 2; i < 19; i += 2) {
+        string s(argv[i]);
+        if (s == "--mem-cyc") {
+            MemCyc = atoi(argv[i + 1]);
+        } else if (s == "--bsize") {
+            BSize = atoi(argv[i + 1]);
+        } else if (s == "--l1-size") {
+            L1Size = atoi(argv[i + 1]);
+        } else if (s == "--l2-size") {
+            L2Size = atoi(argv[i + 1]);
+        } else if (s == "--l1-cyc") {
+            L1Cyc = atoi(argv[i + 1]);
+        } else if (s == "--l2-cyc") {
+            L2Cyc = atoi(argv[i + 1]);
+        } else if (s == "--l1-assoc") {
+            L1Assoc = atoi(argv[i + 1]);
+        } else if (s == "--l2-assoc") {
+            L2Assoc = atoi(argv[i + 1]);
+        } else if (s == "--wr-alloc") {
+            WrAlloc = atoi(argv[i + 1]);
+        } else {
+            cerr << "Error in arguments" << endl;
+            return 0;
+        }
+    }
     
     cacheController cache(BSize, L1Size, L2Size, L1Assoc, L2Assoc, MemCyc, L1Cyc, L2Cyc, WrAlloc);
 
-	while (getline(file, line)) {
+    while (getline(file, line)) {
 
-		stringstream ss(line);
-		string address;
-		char operation = 0; // read (R) or write (W)
-		if (!(ss >> operation >> address)) {
-			// Operation appears in an Invalid format
-			cout << "Command Format error" << endl;
-			return 0;
-		}
-		string cutAddress = address.substr(2); // Removing the "0x" part of the address
+        stringstream ss(line);
+        string address;
+        char operation = 0; // read (R) or write (W)
+        if (!(ss >> operation >> address)) {
+            // Operation appears in an Invalid format
+            cout << "Command Format error" << endl;
+            return 0;
+        }
+        string cutAddress = address.substr(2); // Removing the "0x" part of the address
 
         if(operation == 'r')
         {
@@ -442,12 +442,11 @@ int main(int argc, char **argv)
         {
             cache.execute(Operation::WRITE, (uint32_t)std::strtoul(cutAddress.c_str(), nullptr, 16));
         }
-	}
+    }
 
     std::cout << std::fixed << std::setprecision(3) << "L1miss=" << cache.getL1MissRate() << " L2miss=" << cache.getL2MissRate() << " AccTimeAvg=" << cache.getAverageTime() << std::endl;
 
-
-	return 0;
+    return 0;
 }
 
 //--mem-cyc 100 --bsize 3 --wr-alloc 1 --l1-size 4 --l1-assoc 1 --l1-cyc 1 --l2-size 6 --l2-assoc 0 --l2-cyc 5
