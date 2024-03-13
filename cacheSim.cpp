@@ -302,9 +302,10 @@ private:
     int L1Cyc;
     int L2Cyc;
     bool wrAllocPolicy;
+    int LRUcounter;
 
 public:
-    explicit cacheController(int BSize, int L1size, int L2size, int L1assoc, int L2assoc, int MemCyc, int L1Cyc, int L2Cyc, bool wrAllocPolicy) : blockSize(std::pow(2,BSize)), L1(std::pow(2, L1assoc), std::pow(2,L1size)/std::pow(2,BSize), std::pow(2,BSize)), L2(std::pow(2, L2assoc), std::pow(2,L2size)/std::pow(2,BSize), std::pow(2,BSize)), MemCyc(MemCyc), L1Cyc(L1Cyc), L2Cyc(L2Cyc), wrAllocPolicy(wrAllocPolicy)
+    explicit cacheController(int BSize, int L1size, int L2size, int L1assoc, int L2assoc, int MemCyc, int L1Cyc, int L2Cyc, bool wrAllocPolicy) : blockSize(std::pow(2,BSize)), L1(std::pow(2, L1assoc), std::pow(2,L1size)/std::pow(2,BSize), std::pow(2,BSize)), L2(std::pow(2, L2assoc), std::pow(2,L2size)/std::pow(2,BSize), std::pow(2,BSize)), MemCyc(MemCyc), L1Cyc(L1Cyc), L2Cyc(L2Cyc), wrAllocPolicy(wrAllocPolicy), m_totalTime(0), m_cacheAccessCount(0), LRUcounter(0)
     {
 
     }
@@ -330,19 +331,21 @@ public:
         int defaultAddy = -1;
         int* removedBlockAddress = &defaultAddy;
         m_cacheAccessCount++;
-        if(L1.execute(address, m_cacheAccessCount, op)) //if hit in L1
+        LRUcounter+=2;
+        if(L1.execute(address, LRUcounter, op)) //if hit in L1
         {
             m_totalTime += L1Cyc;
-            //L2.updateAccessNumber(address, m_cacheAccessCount, op);
             return;
         }
-        else if(L2.execute(address, m_cacheAccessCount, op)) //miss in L1 and hit in L2
+        else if(L2.execute(address, LRUcounter, op)) //miss in L1 and hit in L2
         {
             m_totalTime = m_totalTime + L1Cyc + L2Cyc;
+            if(op == Operation::WRITE && !wrAllocPolicy)
+                return;
             bool boolean = false; //This bool will check if removed block was dirty
-            L1.addBlock(address, m_cacheAccessCount, removedBlockAddress, &boolean, op);
+            L1.addBlock(address, LRUcounter, removedBlockAddress, &boolean, op);
             if(boolean)
-                L2.updateAccessNumber(*removedBlockAddress, m_cacheAccessCount, op);
+                L2.updateAccessNumber(*removedBlockAddress, LRUcounter+1, op);
             return;
         }
         else //cache miss
@@ -353,19 +356,16 @@ public:
                 //no change to cache after miss, we write directly to memory
                 return;
             }
+            bool boolean = false; //This bool will check if removed block was dirty
+            L1.addBlock(address, LRUcounter, removedBlockAddress, &boolean, op);
+            if(boolean)
+                L2.updateAccessNumber(*removedBlockAddress, LRUcounter+1, op);
             *removedBlockAddress = -1;
-            bool boolean = false;
-            L2.addBlock(address, m_cacheAccessCount, removedBlockAddress, &boolean, op);
+            L2.addBlock(address, LRUcounter, removedBlockAddress, &boolean, op);
             if(*removedBlockAddress != -1)
             {
                 L1.removeBlock(*removedBlockAddress);
             }
-            boolean = false; //This bool will check if removed block was dirty
-            L1.addBlock(address, m_cacheAccessCount, removedBlockAddress, &boolean, op);
-            if(boolean)
-                L2.updateAccessNumber(*removedBlockAddress, m_cacheAccessCount, op);
-            //if L2 replaces an existing block then make sure the existing block is removed from L1 as well --> Figure out way to know which block you removed from L2 --> different layers will have different tag/set for the same address
-            //update
         }
     }
     
