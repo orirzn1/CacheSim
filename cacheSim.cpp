@@ -286,7 +286,7 @@ public:
     
     double calcMissRate()
     {
-        return std::round(1000.0*missCount / accessCount) / 1000.0;
+        return (double)missCount / (double)accessCount;
     }
 };
 
@@ -312,7 +312,7 @@ public:
     
     double getAverageTime()
     {
-        return std::round(1000.0*m_totalTime / m_cacheAccessCount) / 1000.0;
+        return (double)m_totalTime / (double)m_cacheAccessCount;
     }
     
     double getL1MissRate()
@@ -448,88 +448,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-//--mem-cyc 100 --bsize 3 --wr-alloc 1 --l1-size 4 --l1-assoc 1 --l1-cyc 1 --l2-size 6 --l2-assoc 0 --l2-cyc 5
-//unsigned BSize = 3, L1Size = 4, L2Size = 6, L1Assoc = 1, L2Assoc = 0, MemCyc = 100, L1Cyc = 1, L2Cyc = 5, WrAlloc = 1;
-
-//./cacheSim example3_trace --mem-cyc 10 --bsize 2 --wr-alloc 1 --l1-size 4 --l1-assoc 1 --l1-cyc 1 --l2-size 4 --l2-assoc 2 --l2-cyc 5
-//unsigned BSize = 2, L1Size = 4, L2Size = 4, L1Assoc = 1, L2Assoc = 2, MemCyc = 10, L1Cyc = 1, L2Cyc = 5, WrAlloc = 1;
-//./cacheSim example2_trace --mem-cyc 50 --bsize 4 --wr-alloc 1 --l1-size 6 --l1-assoc 1 --l1-cyc 2 --l2-size 8 --l2-assoc 2 --l2-cyc 4
-//unsigned BSize = 4, L1Size = 6, L2Size = 8, L1Assoc = 1, L2Assoc = 2, MemCyc = 50, L1Cyc = 2, L2Cyc = 4, WrAlloc = 1;
-
-/*cache.execute(Operation::READ, 0x10000000);
-cache.execute(Operation::READ, 0x10000010);
-cache.execute(Operation::READ, 0x10000020);
-cache.execute(Operation::READ, 0x10000030);
-cache.execute(Operation::READ, 0x10000040);
-cache.execute(Operation::READ, 0x10000050);
-cache.execute(Operation::READ, 0x10000060);
-cache.execute(Operation::READ, 0x10000070);
-cache.execute(Operation::READ, 0x10000080);
-cache.execute(Operation::READ, 0x10000090);
-cache.execute(Operation::READ, 0x100000A0);
-cache.execute(Operation::READ, 0x100000B0);
-cache.execute(Operation::READ, 0x100000C0);
-cache.execute(Operation::READ, 0x100000E0);
-cache.execute(Operation::READ, 0x100000F0);
-cache.execute(Operation::WRITE, 0x10000008);
-cache.execute(Operation::WRITE, 0x1000001C);
-cache.execute(Operation::WRITE, 0x10000028);
-cache.execute(Operation::WRITE, 0x1000003C);
-cache.execute(Operation::WRITE, 0x10000048);
-cache.execute(Operation::WRITE, 0x1000005C);
-cache.execute(Operation::WRITE, 0x10000068);
-cache.execute(Operation::WRITE, 0x1000007C);
-cache.execute(Operation::WRITE, 0x10000088);
-cache.execute(Operation::WRITE, 0x1000009C);
-cache.execute(Operation::WRITE, 0x100000A8);
-cache.execute(Operation::WRITE, 0x100000BC);
-cache.execute(Operation::WRITE, 0x100000C8);
-cache.execute(Operation::WRITE, 0x100000EC);
-cache.execute(Operation::WRITE, 0x100000F8);*/
-
-/*
- r 0x00000000
- w 0x00000004
- r 0x00100000
- w 0x00000000
- r 0x0000000C
- r 0x00000010
- r 0x0000001C
- r 0x00000020
- r 0x0000002C
- r 0x00000030
- r 0x0000003C
- r 0x00000040
- r 0x00000008
- w 0x00000044 */
-
-/*cache.execute(Operation::READ, 0x00000000);
-cache.execute(Operation::WRITE, 0x00000004);
-cache.execute(Operation::READ, 0x00100000);
-cache.execute(Operation::WRITE, 0x00000000);
-cache.execute(Operation::READ, 0x0000000C);
-cache.execute(Operation::READ, 0x00000010);
-cache.execute(Operation::READ, 0x0000001C);
-cache.execute(Operation::READ, 0x00000020);
-cache.execute(Operation::READ, 0x0000002C);
-cache.execute(Operation::READ, 0x00000030);
-cache.execute(Operation::READ, 0x0000003C);
-cache.execute(Operation::READ, 0x00000040);
-cache.execute(Operation::READ, 0x00000008);
-cache.execute(Operation::WRITE, 0x00000044);*/
-
-/*
-w 0x00000000
-r 0x00010000
-r 0x00020000
-r 0x00030000
-r 0x00040000
-r 0x00000000
-*/
-/*cache.execute(Operation::WRITE, 0x00000000);
-cache.execute(Operation::READ, 0x00010000);
-cache.execute(Operation::READ, 0x00020000);
-cache.execute(Operation::READ, 0x00030000);
-cache.execute(Operation::READ, 0x00040000);
-cache.execute(Operation::READ, 0x00000000); // should be a hit in L2*/
