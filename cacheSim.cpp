@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <iomanip>
+#include <stdint.h>
 
 using std::FILE;
 using std::string;
